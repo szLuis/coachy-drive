@@ -1,0 +1,22 @@
+<section class="card card-page-title">
+    <div class="card-block">
+        <div class="appbreadcrumb-container">
+            <div class="left-content content">
+
+                <img id="page-title-icon" src={this.props.imageURL}>
+              
+                <h1 id="page-title">          
+                    <small class="text-muted">
+                        {this.props.teamName}
+                        <i class="fa fa-caret-right" aria-hidden="true"></i>
+                    </small>
+                    {this.props.breadcrumb ? this.props.breadcrumb() : null}
+                    {this.props.mainButtons ? this.props.mainButtons() : null}
+                </h1>
+            </div>
+            <div class="right-content content">
+                {this.props.secondaryOptions ? this.props.secondaryOptions() : null}
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,41 @@
+{
+  "name": "drive",
+  "version": "1.0.0",
+  "description": "drive =====",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.26.0",
+    "js-yaml": "^3.11.0",
+    "npm": "^6.1.0",
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "react-on-rails": "^11.0.7",
+    "react-templates": "^0.6.3",
+    "webpack": "^4.10.2",
+    "webpack-cli": "^3.0.1",
+    "webpack-command": "^0.2.0",
+    "webpack-dev": "^1.1.0",
+    "webpack-dev-server": "^3.1.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack-serverside": "webpack --config webpack.config.serverside.js --watch",
+    "webpack-dev": "webpack-dev-server --hot --inline --progress --colors --watch-poll --config webpack.config.js --port 8080  --output-public-path=http://localhost:8080/assets/build/",
+    "lint": "eslint client/js",
+    "build": "webpack -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/szLuis/coachy-drive.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/szLuis/coachy-drive/issues"
+  },
+  "homepage": "https://github.com/szLuis/coachy-drive#readme"
+}
