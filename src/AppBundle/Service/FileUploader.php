@@ -14,9 +14,11 @@ class FileUploader
 
     public function upload(UploadedFile $file)
     {
-        $fileName = md5(uniqid()).'.'.$file->guessExtension();
+        // $fileName = md5(uniqid()).'.'.$file->guessExtension();
+        $fileName = $file->getClientOriginalName();
 
-        $file->move($this->getTargetDirectory(), $fileName);
+        //$file->move($this->getTargetDirectory(), $fileName);
+        $file->move($this->getTargetDirectory(), $fileName );
 
         return $fileName;
     }
@@ -24,5 +26,12 @@ class FileUploader
     public function getTargetDirectory()
     {
         return $this->targetDirectory;
+    }
+
+    public function setTargetDirectory($targetDirectory)
+    {
+        //se concatena el directorio establecido en el servicio 
+        //con el directorio actual donde se sube el archvio
+        $this->targetDirectory = $this->getTargetDirectory() . '/' . $targetDirectory;
     }
 }

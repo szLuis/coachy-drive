@@ -45,9 +45,9 @@ class Drive
     /**
      * @var string
      *
-     * @ORM\Column(name="details_link", type="string", length=255)
+     * @ORM\Column(name="link_details", type="string", length=255)
      */
-    private $detailsLink;
+    private $linkDetails;
 
     /**
      * @var bool
@@ -69,6 +69,13 @@ class Drive
      * @ORM\Column(name="has_children", type="boolean")
      */
     private $hasChildren;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="children", type="simple_array", nullable=true)
+     */
+    private $children;
 
 
     /**
@@ -154,30 +161,6 @@ class Drive
     }
 
     /**
-     * Set detailsLink
-     *
-     * @param string $detailsLink
-     *
-     * @return Drive
-     */
-    public function setDetailsLink($detailsLink)
-    {
-        $this->detailsLink = $detailsLink;
-
-        return $this;
-    }
-
-    /**
-     * Get detailsLink
-     *
-     * @return string
-     */
-    public function getDetailsLink()
-    {
-        return $this->detailsLink;
-    }
-
-    /**
      * Set star
      *
      * @param boolean $star
@@ -248,5 +231,52 @@ class Drive
     {
         return $this->hasChildren;
     }
-}
 
+    /**
+     * Set linkDetails
+     *
+     * @param string $linkDetails
+     *
+     * @return Drive
+     */
+    public function setLinkDetails($linkDetails)
+    {
+        $this->linkDetails = $linkDetails;
+
+        return $this;
+    }
+
+    /**
+     * Get linkDetails
+     *
+     * @return string
+     */
+    public function getLinkDetails()
+    {
+        return $this->linkDetails;
+    }
+
+    /**
+     * Set children
+     *
+     * @param array $children
+     *
+     * @return Drive
+     */
+    public function setChildren($children)
+    {
+        $this->children = $children;
+
+        return $this;
+    }
+
+    /**
+     * Get children
+     *
+     * @return array
+     */
+    public function getChildren()
+    {
+        return $this->children;
+    }
+}
