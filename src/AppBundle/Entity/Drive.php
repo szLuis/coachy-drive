@@ -38,7 +38,7 @@ class Drive
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="dateCreated", type="datetime")
+     * @ORM\Column(name="date_created", type="date")
      */
     private $dateCreated;
 
@@ -55,6 +55,13 @@ class Drive
      * @ORM\Column(name="star", type="boolean")
      */
     private $star;
+
+    /**
+     * @var bool
+     * 
+     * @ORM\Column(name="parent", type="boolean")
+     */
+    private $parent;
 
     /**
      * @var bool
@@ -278,5 +285,29 @@ class Drive
     public function getChildren()
     {
         return $this->children;
+    }
+
+    /**
+     * Set parent
+     *
+     * @param boolean $parent
+     *
+     * @return Drive
+     */
+    public function setParent($parent)
+    {
+        $this->parent = $parent;
+
+        return $this;
+    }
+
+    /**
+     * Get parent
+     *
+     * @return boolean
+     */
+    public function getParent()
+    {
+        return $this->parent;
     }
 }

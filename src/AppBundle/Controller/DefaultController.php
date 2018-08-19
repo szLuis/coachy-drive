@@ -15,6 +15,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use AppBundle\Entity\Drive;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 class DefaultController extends FOSRestController
 {
@@ -23,12 +27,30 @@ class DefaultController extends FOSRestController
      */
     public function indexAction(Request $request)
     {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new DateTimeNormalizer('Y-m-d'),new ObjectNormalizer());
+
+        $serializer = new Serializer($normalizers, $encoders);
+
     
         $em = $this->getDoctrine()->getManager();
 
-        $fileDirectory = $em->getRepository('AppBundle:Drive')->findAll();
+        $parentItems = $em->getRepository('AppBundle:Drive')->getParentItems();
+        // $child = json_encode($em->getRepository('AppBundle:Drive')->getItem(7));
+        // var_dump($child);
+        // exit();
+        $fileDirectory = $em->getRepository('AppBundle:Drive')->getFileDirectory($parentItems);
+         
         
-	    return  new JsonResponse(['response'=>$request], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
+        // exit();
+        // $fileDirectoryJSON = $serializer->serialize($fileDirectory, 'json');
+        // var_dump($fileDirectoryJSON);
+        // $fileDirectoryJSON = json_encode($fileDirectory);
+        $fileDirectory = array("id" => "0","icon" => "folder", "title" => "My drive", 
+        "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  true, "deleted"=>  false,
+        "hasChildren"=> true, "children"=>  $fileDirectory);
+
+	    return  new JsonResponse([$fileDirectory], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
 
         // replace this example code with whatever you need
         return $this->render('default/index.html.twig', [
