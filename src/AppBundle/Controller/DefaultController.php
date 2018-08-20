@@ -66,9 +66,17 @@ class DefaultController extends FOSRestController
         try
         {
             $file = $request->files->get('file');
-            $targetDirectory = $request->get('targetdirectory');
-            $idTargetDirectory = $request->get('id');
-            $fileuploader->setTargetDirectory($targetDirectory);
+
+            $targetDirectory = json_decode($request->get('targetDirectory'));
+            $newTargetDirectory="";
+            array_shift($targetDirectory);
+            foreach ($targetDirectory as $dir)
+            {
+                $newTargetDirectory .=$dir . "/";
+            }
+
+            $idTargetDirectory = $request->get('idTargetDirectory');
+            $fileuploader->setTargetDirectory($newTargetDirectory);
             $fileName = $fileuploader->upload($file);
             
             $drive = new Drive();        
@@ -80,6 +88,7 @@ class DefaultController extends FOSRestController
             $drive->setDeleted(false);
             $drive->setHasChildren(false);
             $drive->setChildren(null);
+            $drive->setParent(0);
             
             $em = $this->getDoctrine()->getManager();
             $em->persist($drive);
@@ -114,15 +123,24 @@ class DefaultController extends FOSRestController
 
             $driveDirectory = $fileuploader->getTargetDirectory();
 
-            $newdir = $request->get('directoryname');
-            $targetDirectory = $request->get('targetdirectory');
-            $idTargetDirectory = $request->get('id');
+            $newdir = $request->get('directoryName');
+            $targetDirectory = $request->get('targetDirectory');
+            $newTargetDirectory="";
+            array_shift($targetDirectory);
+            foreach ($targetDirectory as $dir)
+            {
+                $newTargetDirectory .=$dir . "/";
+            }
+            $idTargetDirectory = $request->get('idTargetDirectory');
+            // var_dump($newdir);
+            // var_dump($targetDirectory);
+            // var_dump($idTargetDirectory);
 
-            if ($filesystem->exists($driveDirectory . '/' . $targetDirectory . '/' . $newdir )){
+            if ($filesystem->exists($driveDirectory . '/' . $newTargetDirectory .  $newdir )){
                 return new JsonResponse(['response'=>'Directory already exists, please rename it before submit'], 301, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
             }
             //create new directory under target directory
-            $dir = $filesystem->mkdir($driveDirectory . '/' . $targetDirectory . '/' . $newdir);
+            $dir = $filesystem->mkdir($driveDirectory . '/' . $newTargetDirectory .  $newdir);
 
             // add new folder to database
             $drive = new Drive();        
@@ -134,6 +152,7 @@ class DefaultController extends FOSRestController
             $drive->setDeleted(false);
             $drive->setHasChildren(false);
             $drive->setChildren(null);
+            $drive->setParent(0);
             
             $em = $this->getDoctrine()->getManager();
             $em->persist($drive);
