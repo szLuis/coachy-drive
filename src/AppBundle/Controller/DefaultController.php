@@ -46,7 +46,7 @@ class DefaultController extends FOSRestController
         // $fileDirectoryJSON = $serializer->serialize($fileDirectory, 'json');
         // var_dump($fileDirectoryJSON);
         // $fileDirectoryJSON = json_encode($fileDirectory);
-        $fileDirectory = array("id" => "0","icon" => "folder", "title" => "My drive", 
+        $fileDirectory = array("id" => 0,"icon" => "folder", "title" => "My drive", 
         "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  true, "deleted"=>  false,
         "hasChildren"=> true, "children"=>  $fileDirectory);
 

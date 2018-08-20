@@ -39,32 +39,19 @@ class DriveRepository extends \Doctrine\ORM\EntityRepository
         return $item->getArrayResult();
     }
 
-    public function getFileDirectory($parentItems)
+    public function getFileDirectory(&$parentItems)
     {
-        print_r($parentItems);
-        $parent = array();
+        $parents = array();
         foreach ($parentItems as $key => $value)
         {
             $children = array();
-            // var_dump($fileDirectory[$key]['children']);
             if ($parentItems[$key]['hasChildren']===true) {
                 foreach ($parentItems[$key]['children'] as $child) {
-                    // var_dump($child);
-                    $newChild = $this->getItem($child);
-                    if ($newChild[0]['hasChildren']===true) {
-                        foreach ($newChild[0]['children'] as $child) {
-                            $newItem = $this->getItem($child);
-                            // print_r($newChild[0]['children']);
-                            \array_push($newChild[0]['children'] , $newItem);
-                        }
-                        $this->getFileDirectory($newChild[0]['children']);
-                    }else{
-                        \array_push($children, $newChild[0]);
-                    }
-                    
+                    $parents = $this->getItem($child);
+                    \array_push($children, $parents[0]);                    
                 }
                 $parentItems[$key]['children'] = $children;
-
+                $this->getFileDirectory($parentItems[$key]['children']);
             }
         }
         return $parentItems;
