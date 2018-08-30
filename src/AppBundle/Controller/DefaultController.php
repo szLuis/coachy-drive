@@ -152,20 +152,29 @@ class DefaultController extends FOSRestController
             $drive->setDeleted(false);
             $drive->setHasChildren(false);
             $drive->setChildren(null);
-            $drive->setParent(0);
+            if ($idTargetDirectory == "0") //se está agregando en la raíz de la carpeta
+                $drive->setParent(1);
+            else {
+                $drive->setParent(0);
+            }
             
             $em = $this->getDoctrine()->getManager();
             $em->persist($drive);
             $em->flush();
 
             //add new folder Id as children of targetDirectory
-            $parentDirectory = $em->getRepository('AppBundle:Drive')->find($idTargetDirectory);
-            $newChild = [$drive->getId()];
-            $currentChildren = $parentDirectory->getChildren();
-            $newChildren = array_merge($currentChildren, $newChild);
-            $parentDirectory->setHasChildren(true);
-            $parentDirectory->setChildren($newChildren);
-            $em->flush();
+            if ($idTargetDirectory != "0") //sino se está agregando en la raíz de la carpeta, update chilren
+            {
+                $parentDirectory = $em->getRepository('AppBundle:Drive')->find($idTargetDirectory);
+                $newChild = [$drive->getId()];
+                $currentChildren = $parentDirectory->getChildren();
+                $newChildren = array_merge($currentChildren, $newChild);
+                $parentDirectory->setHasChildren(true);
+                $parentDirectory->setChildren($newChildren);
+                $em->flush();
+            }
+            
+
             return  new JsonResponse(['response'=>'success', 'id'=>$drive->getId()], 200, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
             
         }
