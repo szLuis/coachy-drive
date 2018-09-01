@@ -23,7 +23,12 @@ class DriveRepository extends \Doctrine\ORM\EntityRepository
                      ->from('AppBundle:Drive', 'd')
                      ->where('d.parent=1');
         $parentItems = $queryBuilder->getQuery();
-        return $parentItems->getArrayResult();
+        $resultparentItemsArray = $parentItems->getArrayResult();
+        foreach ($resultparentItemsArray as &$parentItem) {
+            $dateCreated = $parentItem["dateCreated"]->format('Y-m-d');
+            $parentItem["dateCreated"]=$dateCreated ;
+        }
+        return $resultparentItemsArray;
     }
 
     public function getItem($itemId)
@@ -36,7 +41,10 @@ class DriveRepository extends \Doctrine\ORM\EntityRepository
                      ->where('d.id= :itemId')
                      ->setParameters(array('itemId'=>$itemId));
         $item = $queryBuilder->getQuery();
-        return $item->getArrayResult();
+        $resultItem = $item->getArrayResult();
+        $dateCreated=$resultItem[0]["dateCreated"]->format('Y-m-d');
+        $resultItem[0]["dateCreated"] = $dateCreated;
+        return $resultItem;
     }
 
     public function getFileDirectory(&$parentItems)

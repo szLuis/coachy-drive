@@ -19,6 +19,8 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Asset\Context\NullContext;
 
 class DefaultController extends FOSRestController
 {
@@ -183,6 +185,304 @@ class DefaultController extends FOSRestController
             return new JsonResponse(['response'=>$e->getMessage()], 500, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
         }
         
+    }
+
+    /**
+     * @Route("movefolder/", name="move_directory")
+     */
+    public function moveDirectory(Request $request, FileUploader $fileuploader)
+    {
+        try
+        {
+            $driveDirectory = $fileuploader->getTargetDirectory();
+            // $source = $request->get('source_directory');
+            // $destination = $request->get('destination_directory');
+            $currentDirectoryId = "49";
+            $sourceId = "48";
+            $destinationId = "0";
+
+            $em = $this->getDoctrine()->getManager();
+            
+            //add new folder Id as children of destinationDirectory
+
+            //sino se está agregando en la raíz de la carpeta, update chilren
+            if ($sourceId != "0" && $destinationId != "0" && $currentDirectoryId == "0") 
+            {
+                $destinationDirectory = $em->getRepository('AppBundle:Drive')->find($destinationId);
+                $newChild = [$sourceId];
+                $currentChildren = $destinationDirectory->getChildren();
+                $newChildren = array_merge($currentChildren, $newChild);
+                $destinationDirectory->setHasChildren(true);
+                $destinationDirectory->setChildren($newChildren);
+                $em->flush($destinationDirectory);
+
+                $sourceDirectory = $em->getRepository('AppBundle:Drive')->find($sourceId);
+                $sourceDirectory->setParent(0);
+                $em->flush($sourceDirectory);
+
+            }
+            //update children when it is moving to root folder (My drive)
+            else if ($sourceId != "0" && $destinationId == "0" && $currentDirectoryId != "0") 
+            {
+                $currentDirectory = $em->getRepository('AppBundle:Drive')->find($currentDirectoryId);
+                $currentChildren = $currentDirectory->getChildren();
+                //search sourceId in the current directory children array
+                $offSet = array_search($sourceId, $currentChildren);
+                //remove the child from array
+                array_splice($currentChildren, $offSet, 1);
+                
+                //check if no children in the array
+                if (count($currentChildren) > 0) {
+                    $currentDirectory->setHasChildren(true);
+                    $currentDirectory->setChildren($currentChildren);
+                }    
+                else
+                {
+                    $currentDirectory->setHasChildren(false);
+                    $currentDirectory->setChildren(null);
+                }
+                $em->flush($currentDirectory);
+
+                $sourceDirectory = $em->getRepository('AppBundle:Drive')->find($sourceId);
+                $sourceDirectory->setParent(1);
+                $em->flush($sourceDirectory);
+               
+
+            }
+            //update children when it is moving from folder X to folder Y
+            else if ($sourceId != "0" && $destinationId != "0" && $currentDirectoryId != "0") 
+            {
+                $currentDirectory = $em->getRepository('AppBundle:Drive')->find($currentDirectoryId);
+                $currentChildren = $currentDirectory->getChildren();
+                //search sourceId in the current directory children array
+                $offSet = array_search($sourceId, $currentChildren);
+                //remove the child from array
+                array_splice($currentChildren, $offSet, 1);
+                
+                //check if no children in the array
+                if (count($currentChildren) > 0) {
+                    $currentDirectory->setHasChildren(true);
+                    $currentDirectory->setChildren($currentChildren);
+                }    
+                else
+                {
+                    $currentDirectory->setHasChildren(false);
+                    $currentDirectory->setChildren(null);
+                }
+                $em->flush($currentDirectory);
+
+                //Update children in destinationDirectory
+                $destinationDirectory = $em->getRepository('AppBundle:Drive')->find($destinationId);
+                $newChild = [$sourceId];
+                $currentChildren = $destinationDirectory->getChildren();
+                $newChildren = array_merge($currentChildren, $newChild);
+                $destinationDirectory->setHasChildren(true);
+                $destinationDirectory->setChildren($newChildren);
+                $em->flush($destinationDirectory);
+
+            }
+
+            //Filesystem block
+            // $newTargetDirectory="";
+            // array_shift($targetDirectory);
+            // array_pop($destination);
+
+            // foreach ($targetDirectory as $dir)
+            // {
+            //     $newTargetDirectory .=$dir . "/";
+            // }
+
+            $source = "Yeah/yes/hey";
+            $destination = "My drive";
+            if ($destinationId == "0"){
+                $destination = "";
+            }
+            
+            $folderToMove = "hey";
+            
+
+            
+            $filesystem = new Filesystem();
+
+            $origin = $driveDirectory . DIRECTORY_SEPARATOR . $source ;
+            $target = $driveDirectory . DIRECTORY_SEPARATOR . $destination ;
+
+            //check if target directory exist, if not so create it
+            if (!$filesystem->exists($target . DIRECTORY_SEPARATOR . $folderToMove )){
+                $filesystem->mkdir($target . DIRECTORY_SEPARATOR . $folderToMove );
+            }
+            
+            if (!is_dir($origin) || !is_dir($target))
+            {
+                throw new IOException("Source or Destination directory is not a directory");
+            }
+            
+            // so now target is ready to get mirror of the origin
+            $target = $target . DIRECTORY_SEPARATOR . $folderToMove;
+            
+            $filesystem->mirror($origin,$target);
+            $filesystem->remove($origin);
+            return new JsonResponse(['response' => 'Success on moving directory'], 200, array('content-type'=>'text/json'));
+        }
+        catch(IOException $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type' => 'text/json'));
+        }
+        catch(Exception $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type' => 'text/json'));
+        }
+    }
+
+        /**
+     * @Route("movefile/", name="move_file")
+     */
+    public function moveFile(Request $request, FileUploader $fileuploader)
+    {
+        try
+        {
+            $driveDirectory = $fileuploader->getTargetDirectory();
+            // $source = $request->get('source_directory');
+            // $destination = $request->get('destination_directory');
+            $currentDirectoryId = "0";
+            $sourceId = "8";
+            $destinationId = "5";
+
+            $em = $this->getDoctrine()->getManager();
+            
+            //add new folder Id as children of destinationDirectory
+
+            //sino se está agregando en la raíz de la carpeta, update chilren
+            if ($sourceId != "0" && $destinationId != "0" && $currentDirectoryId == "0") 
+            {
+                $destinationDirectory = $em->getRepository('AppBundle:Drive')->find($destinationId);
+                $newChild = [$sourceId];
+                $currentChildren = $destinationDirectory->getChildren();
+                $newChildren = array_merge($currentChildren, $newChild);
+                $destinationDirectory->setHasChildren(true);
+                $destinationDirectory->setChildren($newChildren);
+                $em->flush($destinationDirectory);
+
+                $sourceDirectory = $em->getRepository('AppBundle:Drive')->find($sourceId);
+                $sourceDirectory->setParent(0);
+                $em->flush($sourceDirectory);
+
+            }
+            //update children when it is moving to root folder (My drive)
+            else if ($sourceId != "0" && $destinationId == "0" && $currentDirectoryId != "0") 
+            {
+                $currentDirectory = $em->getRepository('AppBundle:Drive')->find($currentDirectoryId);
+                $currentChildren = $currentDirectory->getChildren();
+                //search sourceId in the current directory children array
+                $offSet = array_search($sourceId, $currentChildren);
+                //remove the child from array
+                array_splice($currentChildren, $offSet, 1);
+                
+                //check if no children in the array
+                if (count($currentChildren) > 0) {
+                    $currentDirectory->setHasChildren(true);
+                    $currentDirectory->setChildren($currentChildren);
+                }    
+                else
+                {
+                    $currentDirectory->setHasChildren(false);
+                    $currentDirectory->setChildren(null);
+                }
+                $em->flush($currentDirectory);
+
+                $sourceDirectory = $em->getRepository('AppBundle:Drive')->find($sourceId);
+                $sourceDirectory->setParent(1);
+                $em->flush($sourceDirectory);
+               
+
+            }
+            //update children when it is moving from folder X to folder Y
+            else if ($sourceId != "0" && $destinationId != "0" && $currentDirectoryId != "0") 
+            {
+                $currentDirectory = $em->getRepository('AppBundle:Drive')->find($currentDirectoryId);
+                $currentChildren = $currentDirectory->getChildren();
+                //search sourceId in the current directory children array
+                $offSet = array_search($sourceId, $currentChildren);
+                //remove the child from array
+                array_splice($currentChildren, $offSet, 1);
+                
+                //check if no children in the array
+                if (count($currentChildren) > 0) {
+                    $currentDirectory->setHasChildren(true);
+                    $currentDirectory->setChildren($currentChildren);
+                }    
+                else
+                {
+                    $currentDirectory->setHasChildren(false);
+                    $currentDirectory->setChildren(null);
+                }
+                $em->flush($currentDirectory);
+
+                //Update children in destinationDirectory
+                $destinationDirectory = $em->getRepository('AppBundle:Drive')->find($destinationId);
+                $newChild = [$sourceId];
+                $currentChildren = $destinationDirectory->getChildren();
+                $newChildren = array_merge($currentChildren, $newChild);
+                $destinationDirectory->setHasChildren(true);
+                $destinationDirectory->setChildren($newChildren);
+                $em->flush($destinationDirectory);
+
+            }
+
+            //Filesystem block
+            // $newTargetDirectory="";
+            // array_shift($targetDirectory);
+            // array_pop($destination);
+
+            // foreach ($targetDirectory as $dir)
+            // {
+            //     $newTargetDirectory .=$dir . "/";
+            // }
+
+            $source = "foto_visa.jpg";
+            $destination = "pics"; //"first folder/docs/personal/cv/luis";
+            if ($destinationId == "0"){
+                $destination = "";
+            }
+            
+            $fileToMove = "foto_visa.jpg";
+            
+
+            
+            $filesystem = new Filesystem();
+
+            $origin = $driveDirectory . DIRECTORY_SEPARATOR . $source ;
+            $target = $driveDirectory . DIRECTORY_SEPARATOR . $destination ;
+
+            // //check if target directory exist, if not so create it
+            // if (!$filesystem->exists($target . DIRECTORY_SEPARATOR . $folderToMove )){
+            //     $filesystem->mkdir($target . DIRECTORY_SEPARATOR . $folderToMove );
+            // }
+            
+            if (!is_file($origin))
+            {
+                throw new IOException("Selected item is not a regular file");
+            }
+
+            if (!is_dir($target))
+            {
+                throw new IOException("Target directory is not a directory");
+            }
+            
+            // // so now target is ready to get mirror of the origin
+            $target = $target . DIRECTORY_SEPARATOR . $fileToMove;
+            $filesystem->copy($origin, $target, true);
+            $filesystem->remove($origin);
+            return new JsonResponse(['response' => 'Success on moving file'], 200, array('content-type'=>'text/json'));
+        }
+        catch(IOException $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type' => 'text/json'));
+        }
+        catch(Exception $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type' => 'text/json'));
+        }
     }
 
     /**
