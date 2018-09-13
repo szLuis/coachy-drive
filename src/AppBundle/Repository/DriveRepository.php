@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Repository;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * DriveRepository
@@ -10,6 +11,17 @@ namespace AppBundle\Repository;
  */
 class DriveRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function getFileDirectoryJSON()
+    {
+        $parentItems = $this->getParentItems();
+        $fileDirectory = $this->getFileDirectory($parentItems);
+        $fileDirectory = array("id" => 0,"icon" => "folder", "title" => "My drive", 
+        "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  false, "deleted"=>  false,
+        "hasChildren"=> true, "children"=>  $fileDirectory);
+
+	    return  new JsonResponse([$fileDirectory], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
+
+    }
     public function getParentItems()
     {
         $em = $this->getEntityManager();

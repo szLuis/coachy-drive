@@ -31,33 +31,27 @@ class DefaultController extends FOSRestController
     {
         $encoders = array(new JsonEncoder());
         $normalizers = array(new DateTimeNormalizer('Y-m-d'),new ObjectNormalizer());
-
         $serializer = new Serializer($normalizers, $encoders);
 
     
         $em = $this->getDoctrine()->getManager();
 
-        $parentItems = $em->getRepository('AppBundle:Drive')->getParentItems();
-        // $child = json_encode($em->getRepository('AppBundle:Drive')->getItem(7));
-        // var_dump($child);
-        // exit();
-        $fileDirectory = $em->getRepository('AppBundle:Drive')->getFileDirectory($parentItems);
-         
-        
-        // exit();
-        // $fileDirectoryJSON = $serializer->serialize($fileDirectory, 'json');
-        // var_dump($fileDirectoryJSON);
-        // $fileDirectoryJSON = json_encode($fileDirectory);
-        $fileDirectory = array("id" => 0,"icon" => "folder", "title" => "My drive", 
-        "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  true, "deleted"=>  false,
-        "hasChildren"=> true, "children"=>  $fileDirectory);
+        $fileDirectoryJSON = $em->getRepository('AppBundle:Drive')->getFileDirectoryJSON();
 
-	    return  new JsonResponse([$fileDirectory], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
+        return $fileDirectoryJSON;
 
-        // replace this example code with whatever you need
-        return $this->render('default/index.html.twig', [
-            'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
-        ]);
+        // $parentItems = $em->getRepository('AppBundle:Drive')->getParentItems();
+        // $fileDirectory = $em->getRepository('AppBundle:Drive')->getFileDirectory($parentItems);
+        // $fileDirectory = array("id" => 0,"icon" => "folder", "title" => "My drive", 
+        // "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  true, "deleted"=>  false,
+        // "hasChildren"=> true, "children"=>  $fileDirectory);
+
+	    // return  new JsonResponse([$fileDirectory], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
+
+        // // replace this example code with whatever you need
+        // return $this->render('default/index.html.twig', [
+        //     'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
+        // ]);
     }
 
     /**
@@ -486,18 +480,20 @@ class DefaultController extends FOSRestController
     }
 
     /**
-     * @Route("star/", name="star_item")
+     * @Route("star/{idTargetItem}", name="star_item", requirements={"idTargetItem"="\d+"})
      */
-    public function starItemAction(Request $request)
+    public function starItemAction($idTargetItem)
     {
         try
         {
-            $idTargetItem = $request->get('idTargetItem');
             $em = $this->getDoctrine()->getManager();
             $item = $em->getRepository('AppBundle:Drive')->find($idTargetItem);
             $item->setStar(!$item->getStar());
             $em->flush();
-            return  new JsonResponse(['response'=>'success'], 200, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
+
+            $fileDirectoryJSON = $em->getRepository('AppBundle:Drive')->getFileDirectoryJSON();    
+            return $fileDirectoryJSON;
+            // return  new JsonResponse(['response'=>'success'], 200, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
         }
         catch(\Exception $e)
         {
@@ -506,18 +502,20 @@ class DefaultController extends FOSRestController
     }
 
     /**
-     * @Route("trash/", name="trash_item")
+     * @Route("trash/{idTargetItem}", name="trash_item", requirements={"idTargetItem"="\d+"})
      */
-    public function trashItemAction(Request $request)
+    public function trashItemAction($idTargetItem)
     {
         try
         {
-            $idTargetItem = $request->get('idTargetItem');
             $em = $this->getDoctrine()->getManager();
             $item = $em->getRepository('AppBundle:Drive')->find($idTargetItem);
             $item->setDeleted(!$item->getDeleted());
             $em->flush();
-            return  new JsonResponse(['response'=>'success'], 200, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
+
+            $fileDirectoryJSON = $em->getRepository('AppBundle:Drive')->getFileDirectoryJSON();    
+            return $fileDirectoryJSON;
+            // return  new JsonResponse(['response'=>'success'], 200, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
         }
         catch(\Exception $e)
         {
