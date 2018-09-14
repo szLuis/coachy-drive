@@ -40,14 +40,6 @@ class DefaultController extends FOSRestController
 
         return $fileDirectoryJSON;
 
-        // $parentItems = $em->getRepository('AppBundle:Drive')->getParentItems();
-        // $fileDirectory = $em->getRepository('AppBundle:Drive')->getFileDirectory($parentItems);
-        // $fileDirectory = array("id" => 0,"icon" => "folder", "title" => "My drive", 
-        // "dateCreated" =>  "2018-06-15","detailsLink"=>  "#", "star"=>  true, "deleted"=>  false,
-        // "hasChildren"=> true, "children"=>  $fileDirectory);
-
-	    // return  new JsonResponse([$fileDirectory], 200, array('content-type' => 'text/json', 'Access-Control-Allow-Origin' => '*')) ;
-
         // // replace this example code with whatever you need
         // return $this->render('default/index.html.twig', [
         //     'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
@@ -179,6 +171,75 @@ class DefaultController extends FOSRestController
             return new JsonResponse(['response'=>$e->getMessage()], 500, array('Access-Control-Allow-Origin' => '*','content-type' => 'text/json' )) ;
         }
         
+    }
+
+    /**
+     * @Route("rename/", name="rename_item")
+     */
+    public function renameItem(Request $request, FileUploader $fileuploader)
+    {
+        try{
+            $idItemToRename =  $request->get("id");
+            $targetItemName = $request->get("title");
+            $path = json_decode($request->get('targetDirectory'));
+            
+            // $idTargetDirectory = $request->get('idTargetDirectory');
+            // $idItemToRename =  '7';
+            // $targetItemName = 'birthdays';
+            // $path = array('My drive', 'pics');
+            // $idTargetDirectory = $request->get('idTargetDirectory');
+
+
+            $em = $this->getDoctrine()->getManager();
+            $targetItemToRename = $em->getRepository('AppBundle:Drive')->find($idItemToRename);
+            $originItemName = $targetItemToRename->getTitle();
+            
+            $itemType = $targetItemToRename->getIcon();
+            
+
+            $fileSystem = new Filesystem();
+            $driveDirectory = $fileuploader->getTargetDirectory(); //base directory
+            
+            $targetDirectory="";
+            array_shift($path);
+            foreach ($path as $dir)
+            {
+                $targetDirectory .=$dir . "/";
+            }
+                    
+            $origin = $driveDirectory . '/' . $targetDirectory .  $originItemName ;
+            $target = $driveDirectory . '/' . $targetDirectory .  $targetItemName ;
+
+            // return $origin;
+
+            if (!$fileSystem->exists($origin)){
+                throw new IOException("Item path does not exist".$origin);
+            }
+
+            if (!is_dir($origin) && $itemType ==="folder"){
+                throw new IOException("Item is not a directory");
+            }
+
+            if (!is_file($origin) && $itemType ==="file"){
+                throw new IOException("Item is not a file");
+            }
+            
+            $fileSystem->rename($origin, $target);
+            $targetItemToRename->setTitle($targetItemName);
+            $em->flush();
+            $fileDirectoryJSON = $em->getRepository('AppBundle:Drive')->getFileDirectoryJSON();    
+            return $fileDirectoryJSON;
+            // return new JsonResponse(['response'=>'Item renamed successfully'], 200, array('content-type' => 'text/json'));
+        }
+        catch(\IOException $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type' => 'text/json'));
+        }
+        catch(\Exception $e)
+        {
+            return new JsonResponse(['response'=>$e->getMessage()], 500, array('content-type'=>'text/json'));
+
+        }
     }
 
     /**
