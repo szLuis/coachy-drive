@@ -54,6 +54,7 @@ class DefaultController extends FOSRestController
         try
         {
             $file = $request->files->get('file');
+            $driveDirectory = $fileuploader->getTargetDirectory();
 
             $targetDirectory = json_decode($request->get('targetDirectory'));
             $newTargetDirectory="";
@@ -66,12 +67,14 @@ class DefaultController extends FOSRestController
             $idTargetDirectory = $request->get('idTargetDirectory');
             $fileuploader->setTargetDirectory($newTargetDirectory);
             $fileName = $fileuploader->upload($file);
+
+            $fileLink = $newTargetDirectory . $fileName;
             
             $drive = new Drive();        
             $drive->setIcon("file");
             $drive->setTitle($fileName);
             $drive->setDateCreated(new \DateTime('now'));
-            $drive->setLinkDetails("#");
+            $drive->setLinkDetails($fileLink);
             $drive->setStar(false);
             $drive->setDeleted(false);
             $drive->setHasChildren(false);
